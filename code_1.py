@@ -10,40 +10,19 @@ import numpy as np
 # stil Seaborn
 sns.set(style="whitegrid", palette="pastel")
 
-# Pas 1: Colectăm datele istorice
+# Pas 1:datele ultimele 10 luni
 historical_data = [
-    {"ds": "2024-10-01", "y": 12154},
-    {"ds": "2024-10-02", "y": 12150},
-    {"ds": "2024-10-03", "y": 12160},
-    {"ds": "2024-10-04", "y": 12140},
-    {"ds": "2024-10-05", "y": 12170},
-    {"ds": "2024-10-06", "y": 12160},
-    {"ds": "2024-10-07", "y": 12180},
-    {"ds": "2024-10-08", "y": 12150},
-    {"ds": "2024-10-09", "y": 12190},
-    {"ds": "2024-10-10", "y": 12200},
-    {"ds": "2024-10-11", "y": 12180},
-    {"ds": "2024-10-12", "y": 12160},
-    {"ds": "2024-10-13", "y": 12150},
-    {"ds": "2024-10-14", "y": 12140},
-    {"ds": "2024-10-15", "y": 12160},
-    {"ds": "2024-10-16", "y": 12180},
-    {"ds": "2024-10-17", "y": 12190},
-    {"ds": "2024-10-18", "y": 12170},
-    {"ds": "2024-10-19", "y": 12180},
-    {"ds": "2024-10-20", "y": 12160},
-    {"ds": "2024-10-21", "y": 12150},
-    {"ds": "2024-10-22", "y": 12140},
-    {"ds": "2024-10-23", "y": 12130},
-    {"ds": "2024-10-24", "y": 12120},
-    {"ds": "2024-10-25", "y": 12110},
-    {"ds": "2024-10-26", "y": 12100},
-    {"ds": "2024-10-27", "y": 12110},
-    {"ds": "2024-10-28", "y": 12120},
-    {"ds": "2024-10-29", "y": 12130},
-    {"ds": "2024-10-30", "y": 12140},
-    {"ds": "2024-10-31", "y": 12150},
-]
+    {"ds": "2024-01-01", "y": 10000},
+    {"ds": "2024-02-01", "y": 10150},
+    {"ds": "2024-03-01", "y": 10050},
+    {"ds": "2024-04-01", "y": 10200},
+    {"ds": "2024-05-01", "y": 10100},
+    {"ds": "2024-06-01", "y": 10350},
+    {"ds": "2024-07-01", "y": 10280},
+    {"ds": "2024-08-01", "y": 10450},
+    {"ds": "2024-09-01", "y": 10500},
+    {"ds": "2024-10-01", "y": 10650},
+]  # Datele pentru ultimele 10 luni
 
 # Pas 2: Colectăm sentimentul din știri
 
@@ -79,8 +58,8 @@ df['ds'] = pd.to_datetime(df['ds'])
 df['sentiment'] = average_sentiment  # Coloana sentiment
 
 # Creăm laguri de prețuri pentru predicție
-df['lag_1'] = df['y'].shift(1)  # Prețul de ieri
-df['lag_2'] = df['y'].shift(2)  # Prețul de acum 2 zile
+df['lag_1'] = df['y'].shift(1)  # Prețul de luna trecută
+df['lag_2'] = df['y'].shift(2)  # Prețul acum 2 luni
 
 # Eliminăm valorile NaN (datorită lagurilor)
 df.dropna(inplace=True)
@@ -93,7 +72,7 @@ y = df['y']  # Prețul gazului
 model = RandomForestRegressor(n_estimators=100)
 model.fit(X, y)
 
-# Prezicem prețurile pentru următoarele 30 de zile
+# Prezicem prețurile pentru următoarele 30 de zile ale lunii următoare
 future_dates = pd.date_range(
     df['ds'].iloc[-1] + pd.Timedelta(days=1), periods=30, freq='D')
 predicted_prices = []
@@ -102,8 +81,8 @@ predicted_prices = []
 for i in range(30):
     future_sentiment = average_sentiment + \
         np.random.uniform(-0.3, 0.3)  # Variabilitate în sentiment
-    lag_1 = df['y'].iloc[-1]  # Ultimul preț cunoscut
-    lag_2 = df['y'].iloc[-2]  # Prețul de acum 2 zile
+    lag_1 = df['y'].iloc[-1]  # Ultimul preț cunoscut (luna curentă)
+    lag_2 = df['y'].iloc[-2]  # Prețul acum 2 luni
     # Prezicem prețul folosind sentimentul și lagurile
     predicted_price = model.predict([[future_sentiment, lag_1, lag_2]])
     predicted_prices.append(predicted_price[0])
@@ -123,14 +102,14 @@ plt.figure(figsize=(10, 6))
 
 # Prețurile
 plt.plot(df_combined['ds'], df_combined['y'],
-         label='Prețurile în luna Octombrie', color='#5D4E8D', linewidth=2)
+         label='Prețurile în ultimele 10 luni', color='#5D4E8D', linewidth=2)
 
-# Prețurile prezise
-plt.plot(predicted_df['ds'], predicted_df['y'], label='Prezicerea pentru următoarele 30 de zile',
+# Prețurile prezise pentru luna următoare
+plt.plot(predicted_df['ds'], predicted_df['y'], label='Prezicerea pentru luna următoare',
          color='#F10C45', linestyle='--', linewidth=2)  # Linia prezicerii în roz pastelat
 
 # Titlu și etichete
-plt.title('Prezicerea prețului gazului pentru următoarele 30 de zile',
+plt.title('Prezicerea prețului gazului pentru luna următoare',
           fontsize=16, fontweight='bold', family='Poppins')
 plt.xlabel('Data', fontsize=12, fontweight='bold', family='Poppins')
 plt.ylabel('Prețul Gazului (Lei/1000 m³)', fontsize=12,
